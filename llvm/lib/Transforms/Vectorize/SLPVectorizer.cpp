@@ -771,33 +771,6 @@ static bool allSameType(ArrayRef<Value *> VL) {
   return all_of(VL.drop_front(), [&](Value *V) { return V->getType() == Ty; });
 }
 
-/// \returns True if in-tree use also needs extract. This refers to
-/// possible scalar operand in vectorized instruction.
-static bool doesInTreeUserNeedToExtract(Value *Scalar, Instruction *UserInst,
-                                        TargetLibraryInfo *TLI) {
-  unsigned Opcode = UserInst->getOpcode();
-  switch (Opcode) {
-  case Instruction::Load: {
-    LoadInst *LI = cast<LoadInst>(UserInst);
-    return (LI->getPointerOperand() == Scalar);
-  }
-  case Instruction::Store: {
-    StoreInst *SI = cast<StoreInst>(UserInst);
-    return (SI->getPointerOperand() == Scalar);
-  }
-  case Instruction::Call: {
-    CallInst *CI = cast<CallInst>(UserInst);
-    Intrinsic::ID ID = getVectorIntrinsicIDForCall(CI, TLI);
-    return any_of(enumerate(CI->args()), [&](auto &&Arg) {
-      return isVectorIntrinsicWithScalarOpAtArg(ID, Arg.index()) &&
-             Arg.value().get() == Scalar;
-    });
-  }
-  default:
-    return false;
-  }
-}
-
 /// \returns the AA location that is being access by the instruction.
 static MemoryLocation getLocation(Instruction *I) {
   if (StoreInst *SI = dyn_cast<StoreInst>(I))
@@ -4933,19 +4906,10 @@ void BoUpSLP::buildExternalUses(
 
         // Skip in-tree scalars that become vectors
         if (TreeEntry *UseEntry = getTreeEntry(U)) {
-          Value *UseScalar = UseEntry->Scalars[0];
-          // Some in-tree scalars will remain as scalar in vectorized
-          // instructions. If that is the case, the one in Lane 0 will
-          // be used.
-          if (UseScalar != U ||
-              UseEntry->State == TreeEntry::ScatterVectorize ||
-              UseEntry->State == TreeEntry::PossibleStridedVectorize ||
-              !doesInTreeUserNeedToExtract(Scalar, UserInst, TLI)) {
-            LLVM_DEBUG(dbgs() << "SLP: \tInternal user will be removed:" << *U
-                              << ".\n");
-            assert(UseEntry->State != TreeEntry::NeedToGather && "Bad state");
-            continue;
-          }
+          LLVM_DEBUG(dbgs()
+                     << "SLP: \tInternal user will be removed:" << *U << ".\n");
+          assert(UseEntry->State != TreeEntry::NeedToGather && "Bad state");
+          continue;
         }
 
         // Ignore users in the user ignore list.
