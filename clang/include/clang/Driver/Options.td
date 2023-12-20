@@ -985,6 +985,9 @@ def Xoffload_linker : JoinedAndSeparate<["-"], "Xoffload-linker">,
 def Xpreprocessor : Separate<["-"], "Xpreprocessor">, Group<Preprocessor_Group>,
   HelpText<"Pass <arg> to the preprocessor">, MetaVarName<"<arg>">;
 def X_Flag : Flag<["-"], "X">, Group<Link_Group>;
+def Xspirv_translator : Separate<["-"], "Xspirv-translator">,
+  HelpText<"Pass <arg> to the LLVM IR to SPIR-V translation backend.">, MetaVarName<"<arg>">, Flags<[HelpHidden]>,
+  Visibility<[ClangOption, CLOption, DXCOption]>;
 // Used by some macOS projects. IgnoredGCCCompat is a misnomer since GCC doesn't allow it.
 def : Flag<["-"], "Xparser">, IgnoredGCCCompat;
 // FIXME -Xcompiler is misused by some ChromeOS packages. Remove it after a while.

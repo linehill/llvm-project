@@ -127,6 +127,11 @@ void HIPSPV::Linker::constructLinkAndEmitSpirvCommand(
 
   const char *VersionOptCStr = C.getArgs().MakeArgString(VersionOpt);
   llvm::opt::ArgStringList TrArgs{VersionOptCStr, "--spirv-ext=+all"};
+
+  auto XOpts = Args.getAllArgValues(options::OPT_Xspirv_translator);
+  for (const auto &XOpt : XOpts)
+    TrArgs.push_back(C.getArgs().MakeArgString(XOpt));
+
   InputInfo TrInput = InputInfo(types::TY_LLVM_BC, TempFile, "");
   SPIRV::constructTranslateCommand(C, *this, JA, Output, TrInput, TrArgs);
 }
