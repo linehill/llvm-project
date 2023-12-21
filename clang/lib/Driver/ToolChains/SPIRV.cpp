@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 #include "SPIRV.h"
 #include "CommonArgs.h"
+#include "clang/Basic/Version.h"
 #include "clang/Driver/Compilation.h"
 #include "clang/Driver/Driver.h"
 #include "clang/Driver/InputInfo.h"
@@ -32,8 +33,13 @@ void SPIRV::constructTranslateCommand(Compilation &C, const Tool &T,
 
   CmdArgs.append({"-o", Output.getFilename()});
 
-  const char *Exec =
-      C.getArgs().MakeArgString(T.getToolChain().GetProgramPath("llvm-spirv"));
+  // Try to find "llvm-spirv-<version>". Otherwise, fall back to "llvm-spirv".
+  std::string ExeCand =
+      T.getToolChain().GetProgramPath("llvm-spirv-" CLANG_VERSION_MAJOR_STRING);
+  if (ExeCand.find("/") == std::string_view::npos)
+    ExeCand = T.getToolChain().GetProgramPath("llvm-spirv");
+
+  const char *Exec = C.getArgs().MakeArgString(ExeCand);
   C.addCommand(std::make_unique<Command>(JA, T, ResponseFileSupport::None(),
                                          Exec, CmdArgs, Input, Output));
 }
