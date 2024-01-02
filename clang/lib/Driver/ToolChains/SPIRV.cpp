@@ -52,7 +52,13 @@ void SPIRV::Translator::ConstructJob(Compilation &C, const JobAction &JA,
   claimNoWarnArgs(Args);
   if (Inputs.size() != 1)
     llvm_unreachable("Invalid number of input files.");
-  constructTranslateCommand(C, *this, JA, Output, Inputs[0], {});
+
+  auto XOpts = Args.getAllArgValues(options::OPT_Xspirv_translator);
+  llvm::opt::ArgStringList TrArgs{};
+  for (const auto &XOpt : XOpts)
+    TrArgs.push_back(C.getArgs().MakeArgString(XOpt));
+
+  constructTranslateCommand(C, *this, JA, Output, Inputs[0], TrArgs);
 }
 
 clang::driver::Tool *SPIRVToolChain::getTranslator() const {
