@@ -33,10 +33,11 @@ void SPIRV::constructTranslateCommand(Compilation &C, const Tool &T,
 
   CmdArgs.append({"-o", Output.getFilename()});
 
-  // Try to find "llvm-spirv-<version>". Otherwise, fall back to "llvm-spirv".
+  // Try to find "llvm-spirv-<version>". Otherwise, fall back to plain
+  // "llvm-spirv".
   std::string ExeCand =
       T.getToolChain().GetProgramPath("llvm-spirv-" CLANG_VERSION_MAJOR_STRING);
-  if (ExeCand.find("/") == std::string_view::npos)
+  if (!llvm::sys::fs::can_execute(ExeCand))
     ExeCand = T.getToolChain().GetProgramPath("llvm-spirv");
 
   const char *Exec = C.getArgs().MakeArgString(ExeCand);
