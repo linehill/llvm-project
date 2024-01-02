@@ -96,37 +96,7 @@ void HIPSPV::Linker::constructLinkAndEmitSpirvCommand(
   }
 
   // Emit SPIR-V binary.
-
-  // TODO: relocate this to SPIRV::constructTranslateCommand().
-  std::string VersionOpt = "--spirv-max-version=";
-  switch (getToolChain().getTriple().getSubArch()) {
-  default:
-    llvm_unreachable("Unexpected subarch!");
-  case llvm::Triple::NoSubArch:
-    VersionOpt += "1.1";
-    break;
-  case llvm::Triple::SPIRVSubArch_v10:
-    VersionOpt += "1.0";
-    break;
-  case llvm::Triple::SPIRVSubArch_v11:
-    VersionOpt += "1.1";
-    break;
-  case llvm::Triple::SPIRVSubArch_v12:
-    VersionOpt += "1.2";
-    break;
-  case llvm::Triple::SPIRVSubArch_v13:
-    VersionOpt += "1.3";
-    break;
-  case llvm::Triple::SPIRVSubArch_v14:
-    VersionOpt += "1.4";
-    break;
-  case llvm::Triple::SPIRVSubArch_v15:
-    VersionOpt += "1.5";
-    break;
-  }
-
-  const char *VersionOptCStr = C.getArgs().MakeArgString(VersionOpt);
-  llvm::opt::ArgStringList TrArgs{VersionOptCStr, "--spirv-ext=+all"};
+  llvm::opt::ArgStringList TrArgs{"--spirv-ext=+all"};
 
   auto XOpts = Args.getAllArgValues(options::OPT_Xspirv_translator);
   for (const auto &XOpt : XOpts)
